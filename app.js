@@ -211,24 +211,63 @@ function updateVisualization() {
 }
 
 function drawWaveform() {
-    const data = audioEngine.getWaveformData();
-    if (!data) return;
+    const voiceData = audioEngine.getWaveformData();
+    const melodyData = audioEngine.getMelodyWaveformData();
+    if (!voiceData) return;
 
     const width = waveformCanvas.width;
     const height = waveformCanvas.height;
 
+    // Clear canvas
     waveformCtx.fillStyle = '#f0f0f0';
     waveformCtx.fillRect(0, 0, width, height);
 
+    // Draw center line
+    waveformCtx.strokeStyle = '#ddd';
+    waveformCtx.lineWidth = 1;
+    waveformCtx.beginPath();
+    waveformCtx.moveTo(0, height / 2);
+    waveformCtx.lineTo(width, height / 2);
+    waveformCtx.stroke();
+
+    // Draw melody waveform (green) if playing
+    if (melodyData && audioEngine.isPlayingMelody) {
+        waveformCtx.lineWidth = 2;
+        waveformCtx.strokeStyle = '#2ecc71';
+        waveformCtx.globalAlpha = 0.7;
+        waveformCtx.beginPath();
+
+        const sliceWidth = width / melodyData.length;
+        let x = 0;
+
+        for (let i = 0; i < melodyData.length; i++) {
+            const v = melodyData[i] / 128.0;
+            const y = v * height / 2;
+
+            if (i === 0) {
+                waveformCtx.moveTo(x, y);
+            } else {
+                waveformCtx.lineTo(x, y);
+            }
+
+            x += sliceWidth;
+        }
+
+        waveformCtx.lineTo(width, height / 2);
+        waveformCtx.stroke();
+        waveformCtx.globalAlpha = 1.0;
+    }
+
+    // Draw voice waveform (blue)
     waveformCtx.lineWidth = 2;
     waveformCtx.strokeStyle = '#667eea';
     waveformCtx.beginPath();
 
-    const sliceWidth = width / data.length;
+    const sliceWidth = width / voiceData.length;
     let x = 0;
 
-    for (let i = 0; i < data.length; i++) {
-        const v = data[i] / 128.0;
+    for (let i = 0; i < voiceData.length; i++) {
+        const v = voiceData[i] / 128.0;
         const y = v * height / 2;
 
         if (i === 0) {

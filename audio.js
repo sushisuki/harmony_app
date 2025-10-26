@@ -17,6 +17,11 @@ class AudioEngine {
             tempo: null,
             key: null
         };
+        // Melody analyser for dual waveform display
+        this.melodyAnalyser = null;
+        this.melodyDataArray = null;
+        this.melodyGainNode = null;
+        this.isPlayingMelody = false;
     }
 
     async initialize() {
@@ -43,6 +48,16 @@ class AudioEngine {
             // Connect microphone to analyser
             this.microphone = this.audioContext.createMediaStreamSource(stream);
             this.microphone.connect(this.analyser);
+
+            // Create melody analyser for dual waveform display
+            this.melodyAnalyser = this.audioContext.createAnalyser();
+            this.melodyAnalyser.fftSize = 4096;
+            this.melodyDataArray = new Uint8Array(this.melodyAnalyser.frequencyBinCount);
+
+            // Create master gain node for melody
+            this.melodyGainNode = this.audioContext.createGain();
+            this.melodyGainNode.connect(this.melodyAnalyser);
+            this.melodyAnalyser.connect(this.audioContext.destination);
 
             // Setup media recorder for recording
             this.mediaRecorder = new MediaRecorder(stream);
@@ -113,6 +128,12 @@ class AudioEngine {
         if (!this.analyser) return null;
         this.analyser.getByteTimeDomainData(this.dataArray);
         return this.dataArray;
+    }
+
+    getMelodyWaveformData() {
+        if (!this.melodyAnalyser) return null;
+        this.melodyAnalyser.getByteTimeDomainData(this.melodyDataArray);
+        return this.melodyDataArray;
     }
 
     getFrequencyData() {
@@ -212,6 +233,8 @@ class AudioEngine {
 
         const beatDuration = 60 / tempo;
 
+        this.isPlayingMelody = true;
+
         for (let i = 0; i < notes.length; i++) {
             const { note, octave, duration } = notes[i];
 
@@ -223,6 +246,8 @@ class AudioEngine {
             const frequency = noteToFrequency(note, octave, key);
             await this.playTone(frequency, beatDuration * duration);
         }
+
+        this.isPlayingMelody = false;
     }
 
     async playTone(frequency, duration) {
@@ -230,7 +255,8 @@ class AudioEngine {
         const gainNode = this.audioContext.createGain();
 
         oscillator.connect(gainNode);
-        gainNode.connect(this.audioContext.destination);
+        // Connect to melody gain node for dual waveform display
+        gainNode.connect(this.melodyGainNode);
 
         oscillator.frequency.value = frequency;
         oscillator.type = 'sine';
@@ -275,7 +301,8 @@ class AudioEngine {
             const gainNode = this.audioContext.createGain();
 
             oscillator.connect(gainNode);
-            gainNode.connect(this.audioContext.destination);
+            // Connect to melody gain node for dual waveform display
+            gainNode.connect(this.melodyGainNode);
 
             oscillator.frequency.value = freq;
             oscillator.type = 'sine';
