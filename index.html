@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ハモリ練習アプリ</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎵 ハモリ練習アプリ</h1>
+            <p>メロディに合わせてハモリを練習しましょう</p>
+        </header>
+
+        <main>
+            <section class="control-panel">
+                <div class="mode-selector">
+                    <h3>練習モード</h3>
+                    <select id="harmonyMode">
+                        <option value="third">3度上</option>
+                        <option value="third-down">3度下</option>
+                        <option value="fifth">5度上</option>
+                        <option value="octave">オクターブ上</option>
+                    </select>
+                </div>
+
+                <div class="controls">
+                    <button id="playMelody" class="btn btn-primary">
+                        <span class="icon">▶</span> メロディ再生
+                    </button>
+                    <button id="startRecording" class="btn btn-record">
+                        <span class="icon">🎤</span> 録音開始
+                    </button>
+                    <button id="stopRecording" class="btn btn-stop" disabled>
+                        <span class="icon">⏹</span> 録音停止
+                    </button>
+                    <button id="playback" class="btn btn-secondary" disabled>
+                        <span class="icon">🔊</span> 再生
+                    </button>
+                </div>
+
+                <div class="tempo-control">
+                    <label for="tempo">テンポ: <span id="tempoValue">120</span> BPM</label>
+                    <input type="range" id="tempo" min="60" max="180" value="120">
+                </div>
+
+                <div class="key-selector">
+                    <label for="keySelect">キー:</label>
+                    <select id="keySelect">
+                        <option value="C">C (ハ長調)</option>
+                        <option value="D">D (ニ長調)</option>
+                        <option value="E">E (ホ長調)</option>
+                        <option value="F">F (ヘ長調)</option>
+                        <option value="G">G (ト長調)</option>
+                        <option value="A">A (イ長調)</option>
+                        <option value="B">B (ロ長調)</option>
+                    </select>
+                </div>
+            </section>
+
+            <section class="visualization">
+                <div class="pitch-display">
+                    <h3>ピッチ表示</h3>
+                    <canvas id="pitchCanvas" width="800" height="300"></canvas>
+                    <div id="noteDisplay" class="note-display">-</div>
+                    <div id="frequencyDisplay" class="frequency-display">0 Hz</div>
+                </div>
+
+                <div class="waveform-display">
+                    <h3>波形表示</h3>
+                    <canvas id="waveformCanvas" width="800" height="150"></canvas>
+                </div>
+            </section>
+
+            <section class="practice-patterns">
+                <h3>練習パターン</h3>
+                <div class="pattern-buttons">
+                    <button class="btn btn-pattern" data-pattern="scale">音階練習</button>
+                    <button class="btn btn-pattern" data-pattern="arpeggio">アルペジオ</button>
+                    <button class="btn btn-pattern" data-pattern="simple">シンプルメロディ</button>
+                    <button class="btn btn-pattern" data-pattern="chord">コード進行</button>
+                </div>
+            </section>
+
+            <section class="feedback">
+                <div id="feedbackMessage" class="feedback-message"></div>
+                <div id="accuracy" class="accuracy-display">
+                    <span>精度: </span><span id="accuracyValue">-</span>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Web Audio APIを使用したハモリ練習アプリ</p>
+        </footer>
+    </div>
+
+    <script src="audio.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
