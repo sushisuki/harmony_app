@@ -106,22 +106,50 @@ async function playMelody() {
     playMelodyBtn.disabled = false;
 }
 
-function startRecording() {
+async function startRecording() {
     if (!isInitialized) {
         showFeedback('マイクの初期化が必要です', 'warning');
         return;
     }
 
+    if (isPlaying) {
+        showFeedback('メロディ再生中は録音できません', 'warning');
+        return;
+    }
+
+    const tempo = parseInt(tempoSlider.value);
+    const key = keySelect.value;
+    const pattern = PRACTICE_PATTERNS[currentPattern];
+
+    // Save recording context for playback
+    audioEngine.setRecordingContext(pattern, tempo, key);
+
+    // Start recording
     audioEngine.startRecording();
     startRecordingBtn.disabled = true;
     stopRecordingBtn.disabled = false;
     playbackBtn.disabled = true;
+    playMelodyBtn.disabled = true;
     document.body.classList.add('recording');
 
     pitchHistory = [];
     targetPitchHistory = [];
 
-    showFeedback('録音中... ハモリを歌ってください！', 'info');
+    showFeedback(`録音開始！メロディと一緒にハモリを歌ってください (${getPatternName(currentPattern)})`, 'info');
+
+    // Play melody automatically during recording
+    isPlaying = true;
+    try {
+        await audioEngine.playMelody(pattern, tempo, key);
+    } catch (error) {
+        console.error('Melody playback error:', error);
+    }
+    isPlaying = false;
+
+    // Auto-stop recording after melody finishes (if still recording)
+    if (audioEngine.recording) {
+        showFeedback('メロディ終了！録音を停止してください', 'info');
+    }
 }
 
 function stopRecording() {
@@ -129,20 +157,43 @@ function stopRecording() {
     startRecordingBtn.disabled = false;
     stopRecordingBtn.disabled = true;
     playbackBtn.disabled = false;
+    playMelodyBtn.disabled = false;
     document.body.classList.remove('recording');
 
     calculateAccuracy();
-    showFeedback('録音完了！再生ボタンで確認できます', 'success');
+    showFeedback('録音完了！再生ボタンでメロディと一緒に確認できます', 'success');
 }
 
-function playback() {
+async function playback() {
     if (!audioEngine.recordedBlob) {
         showFeedback('録音データがありません', 'warning');
         return;
     }
 
-    audioEngine.playRecording();
-    showFeedback('録音を再生中...', 'info');
+    if (isPlaying) {
+        showFeedback('再生中です', 'warning');
+        return;
+    }
+
+    isPlaying = true;
+    playbackBtn.disabled = true;
+    startRecordingBtn.disabled = true;
+    playMelodyBtn.disabled = true;
+
+    showFeedback('録音とメロディを再生中...', 'info');
+
+    try {
+        await audioEngine.playRecordingWithMelody();
+        showFeedback('再生完了！', 'success');
+    } catch (error) {
+        console.error('Playback error:', error);
+        showFeedback('再生エラーが発生しました', 'warning');
+    }
+
+    isPlaying = false;
+    playbackBtn.disabled = false;
+    startRecordingBtn.disabled = false;
+    playMelodyBtn.disabled = false;
 }
 
 function startVisualization() {
