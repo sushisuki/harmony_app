@@ -11,6 +11,12 @@ class AudioEngine {
         this.recordedChunks = [];
         this.mediaRecorder = null;
         this.recordedBlob = null;
+        // Store recording context for playback with melody
+        this.recordingContext = {
+            pattern: null,
+            tempo: null,
+            key: null
+        };
     }
 
     async initialize() {
@@ -76,6 +82,31 @@ class AudioEngine {
             const audio = new Audio(URL.createObjectURL(this.recordedBlob));
             audio.play();
         }
+    }
+
+    // Play recording with melody simultaneously
+    async playRecordingWithMelody() {
+        if (!this.recordedBlob || !this.recordingContext.pattern) {
+            // Fallback to simple playback if no melody context
+            this.playRecording();
+            return;
+        }
+
+        // Start recording playback
+        const audio = new Audio(URL.createObjectURL(this.recordedBlob));
+        audio.play();
+
+        // Start melody playback simultaneously
+        await this.playMelody(
+            this.recordingContext.pattern,
+            this.recordingContext.tempo,
+            this.recordingContext.key
+        );
+    }
+
+    // Set recording context (called when starting recording)
+    setRecordingContext(pattern, tempo, key) {
+        this.recordingContext = { pattern, tempo, key };
     }
 
     getWaveformData() {
